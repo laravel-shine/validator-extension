@@ -13,4 +13,4 @@ Extend Laravel Validation Rules
 | x_digits | `/^[0-9]+$/` | Numeric charaters
 | x_digits:length | `/^[0-9]{length}$/` | Numeric charaters that have an exact length.
 | x_digits:min,max | `/^[0-9]{min,max}$/` | Numeric charaters that have a length between `min` and `max`.
-
+| float | `is_float()` | Is float number

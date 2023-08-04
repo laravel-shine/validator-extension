@@ -58,5 +58,20 @@ class ValidatorExtensionServiceProvider extends ServiceProvider
                     return $translator->get('validation.digits_between', ['attribute' => $attribute, 'min' => $parameters[0], 'max' => $parameters[1]]);
             }
         });
+
+        $this->extendFloat($validator, $translator);
+    }
+
+    public function extendFloat($validator, $translator)
+    {
+        if (!$translator->has('validation.float')) {
+            $translator->addLines([
+                'validation.float' => 'The :attribute field must be a float number.',
+            ], 'en');
+        }
+
+        $validator->extend('float', function ($attribute, $value) {
+            return (is_string($value) || is_numeric($value)) && false !== filter_var($value, FILTER_VALIDATE_FLOAT);
+        });
     }
 }
