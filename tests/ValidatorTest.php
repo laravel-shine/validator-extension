@@ -24,14 +24,13 @@ class ValidatorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->container = \Mockery::mock(\Illuminate\Container\Container::class);
-
         $loader = new \Illuminate\Translation\ArrayLoader();
         $this->translator = new \Illuminate\Translation\Translator($loader, 'en');
         $this->validator = new \Illuminate\Validation\Factory($this->translator);
 
-        $this->container->shouldReceive('offsetGet')->with('translator')->andReturn($this->translator);
-        $this->container->shouldReceive('offsetGet')->with('validator')->andReturn($this->validator);
+        $this->container = new \Illuminate\Container\Container;
+        $this->container->instance('translator', $this->translator);
+        $this->container->instance('validator', $this->validator);
 
         $service_provider = new ValidatorExtensionServiceProvider($this->container);
         $service_provider->boot();
