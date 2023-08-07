@@ -3,7 +3,6 @@
 namespace Tests;
 
 use LaravelShine\ValidatorExtension\ValidatorExtensionServiceProvider;
-use Mockery;
 use PHPUnit\Framework\TestCase;
 
 class ValidatorTest extends TestCase
@@ -25,9 +24,9 @@ class ValidatorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->container = Mockery::mock(\Illuminate\Container\Container::class);
+        $this->container = \Mockery::mock(\Illuminate\Container\Container::class);
 
-        $loader = new \Illuminate\Translation\ArrayLoader;
+        $loader = new \Illuminate\Translation\ArrayLoader();
         $this->translator = new \Illuminate\Translation\Translator($loader, 'en');
         $this->validator = new \Illuminate\Validation\Factory($this->translator);
 
@@ -131,16 +130,16 @@ class ValidatorTest extends TestCase
         $v = $this->validator->make(['v2' => 'http://g232oogle.com'], $rules);
         $this->assertTrue($v->fails());
 
-        $v = $this->validator->make(['v1' => '१२३'], $rules); //numbers in Hindi
+        $v = $this->validator->make(['v1' => '१२३'], $rules); // numbers in Hindi
         $this->assertTrue($v->passes());
 
-        $v = $this->validator->make(['v2' => '१२३'], $rules); //numbers in Hindi
+        $v = $this->validator->make(['v2' => '१२३'], $rules); // numbers in Hindi
         $this->assertTrue($v->fails());
 
-        $v = $this->validator->make(['v1' => '٧٨٩'], $rules); //eastern arabic numerals
+        $v = $this->validator->make(['v1' => '٧٨٩'], $rules); // eastern arabic numerals
         $this->assertTrue($v->passes());
 
-        $v = $this->validator->make(['v2' => '٧٨٩'], $rules); //eastern arabic numerals
+        $v = $this->validator->make(['v2' => '٧٨٩'], $rules); // eastern arabic numerals
         $this->assertTrue($v->fails());
 
         $v = $this->validator->make(['v1' => 'नमस्कार'], $rules);
@@ -316,14 +315,64 @@ class ValidatorTest extends TestCase
             'z' => '-',
         ], [
             'x' => 'x_digits',
-            'y' => "x_digits:$size",
-            'z' => "x_digits:$min,$max",
+            'y' => "x_digits:{$size}",
+            'z' => "x_digits:{$min},{$max}",
         ]);
 
         $this->assertEquals([
             'x' => ['The x must be a number.'],
-            'y' => ["The y must be $size digits."],
-            'z' => ["The z must be between $min and $max digits."],
+            'y' => ["The y must be {$size} digits."],
+            'z' => ["The z must be between {$min} and {$max} digits."],
         ], $v->errors()->getMessages());
+    }
+
+    public function testFloat(): void
+    {
+        $this->assertTrue($this->floatValidator('3.14')->passes());
+        $this->assertTrue($this->floatValidator('+3.14')->passes());
+        $this->assertTrue($this->floatValidator('-3.14')->passes());
+        $this->assertTrue($this->floatValidator('0.123')->passes());
+        $this->assertTrue($this->floatValidator('-0.123')->passes());
+        $this->assertTrue($this->floatValidator('1234.567')->passes());
+        $this->assertTrue($this->floatValidator('3')->passes());
+        $this->assertTrue($this->floatValidator('+3')->passes());
+        $this->assertTrue($this->floatValidator('-3')->passes());
+        $this->assertTrue($this->floatValidator('1e3')->passes());
+        $this->assertTrue($this->floatValidator('+1e3')->passes());
+        $this->assertTrue($this->floatValidator('-1e3')->passes());
+        $this->assertTrue($this->floatValidator('1.2e3')->passes());
+        $this->assertTrue($this->floatValidator('-1.2e-3')->passes());
+        $this->assertTrue($this->floatValidator('1.2e-3')->passes());
+
+        $this->assertTrue($this->floatValidator('0')->passes());
+        $this->assertTrue($this->floatValidator('00')->passes());
+        $this->assertTrue($this->floatValidator('0.0')->passes());
+        $this->assertTrue($this->floatValidator('-0.0')->passes());
+        $this->assertTrue($this->floatValidator('0.000')->passes());
+        $this->assertTrue($this->floatValidator('-0.000')->passes());
+        $this->assertTrue($this->floatValidator('00.00')->passes());
+        $this->assertTrue($this->floatValidator('00.0')->passes());
+        $this->assertTrue($this->floatValidator('.0')->passes());
+        $this->assertTrue($this->floatValidator('.00')->passes());
+        $this->assertTrue($this->floatValidator('0.')->passes());
+        $this->assertTrue($this->floatValidator('00.')->passes());
+
+        $this->assertTrue($this->floatValidator('.1')->passes());
+        $this->assertTrue($this->floatValidator('0.1')->passes());
+        $this->assertTrue($this->floatValidator('1.')->passes());
+
+        $this->assertTrue($this->floatValidator('abc')->fails());
+        $this->assertTrue($this->floatValidator('abc123')->fails());
+        $this->assertTrue($this->floatValidator('123abc')->fails());
+
+        $this->assertSame(
+            ['f' => ['The f field must be a float number.']],
+            $this->floatValidator('123abc')->errors()->toArray()
+        );
+    }
+
+    private function floatValidator($v)
+    {
+        return $this->validator->make(['f' => $v], ['f' => 'float']);
     }
 }
